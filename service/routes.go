@@ -89,6 +89,8 @@ func NewRouter() *mux.Router {
 	router.Methods("POST").Path("/v1-auth/saml/acs").Name("SamlACS")
 	router.Methods("GET").Path("/v1-auth/saml/metadata").Name("SamlMetadata")
 
+	router.Methods("POST").Path("/v1-auth/testLogin").Handler(api.ApiHandler(schemas, http.HandlerFunc(TestLogin)))
+
 	if server.SamlServiceProvider != nil {
 		log.Debugf("Adding saml routes to router")
 		addRouteHandler(server.SamlServiceProvider.RequireAccount(http.HandlerFunc(HandleSamlPost)), "SamlLogin")
