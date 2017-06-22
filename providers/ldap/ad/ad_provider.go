@@ -36,7 +36,7 @@ const (
 	ServiceAccountPasswordSetting   = settingBase + "service.account.password"
 	UserEnabledAttributeSetting     = settingBase + "user.enabled.attribute"
 	GroupNameFieldSetting           = settingBase + "group.name.field"
-	TlsSetting                      = settingBase + "tls"
+	TLSSetting                      = settingBase + "tls"
 	TimeoutSetting                  = settingBase + "connection.timeout"
 	AllowedIdentitiesSetting        = settingBase + "allowed.identities"
 	GroupDnFieldSetting             = settingBase + "group.dn.field"
@@ -111,7 +111,7 @@ func (a *ADProvider) GetSettings() map[string]string {
 	}
 	settings[UserEnabledAttributeSetting] = a.LdapClient.Config.UserEnabledAttribute
 	settings[GroupNameFieldSetting] = a.LdapClient.Config.GroupNameField
-	settings[TlsSetting] = strconv.FormatBool(a.LdapClient.Config.Tls)
+	settings[TLSSetting] = strconv.FormatBool(a.LdapClient.Config.TLS)
 	settings[TimeoutSetting] = strconv.FormatInt(a.LdapClient.Config.ConnectionTimeout, 10)
 	settings[GroupDnFieldSetting] = a.LdapClient.Config.GroupDNField
 	settings[GroupMemberUserAttributeSetting] = a.LdapClient.Config.GroupMemberUserAttribute
@@ -152,11 +152,11 @@ func (a *ADProvider) AddProviderConfig(authConfig *model.AuthConfig, providerSet
 	ldapConfig.ServiceAccountPassword = providerSettings[ServiceAccountPasswordSetting]
 	ldapConfig.UserEnabledAttribute = setDefault(providerSettings[UserEnabledAttributeSetting], "userAccountControl")
 	ldapConfig.GroupNameField = setDefault(providerSettings[GroupNameFieldSetting], "name")
-	tls, err := strconv.ParseBool(providerSettings[TlsSetting])
+	tls, err := strconv.ParseBool(providerSettings[TLSSetting])
 	if err != nil {
 		log.Errorf("Error in updating config %v", err)
 	}
-	ldapConfig.Tls = tls
+	ldapConfig.TLS = tls
 	connectionTimeout, err := strconv.ParseInt(setDefault(providerSettings[TimeoutSetting], "10"), 10, 64)
 	if err != nil {
 		log.Errorf("Error in updating config %v", err)
@@ -197,7 +197,7 @@ func (a *ADProvider) GetProviderSettingList(listOnly bool) []string {
 	settings = append(settings, ServiceAccountPasswordSetting)
 	settings = append(settings, UserEnabledAttributeSetting)
 	settings = append(settings, GroupNameFieldSetting)
-	settings = append(settings, TlsSetting)
+	settings = append(settings, TLSSetting)
 	settings = append(settings, TimeoutSetting)
 	settings = append(settings, GroupDnFieldSetting)
 	settings = append(settings, GroupMemberUserAttributeSetting)
