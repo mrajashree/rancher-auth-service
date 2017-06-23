@@ -51,6 +51,10 @@ func NewRouter() *mux.Router {
 	shibbolethconfig := schemas.AddType("shibbolethconfig", model.ShibbolethConfig{})
 	shibbolethconfig.CollectionMethods = []string{}
 
+	// LdapConfig
+	ldapconfig := schemas.AddType("ldapconfig", model.LdapConfig{})
+	ldapconfig.CollectionMethods = []string{}
+
 	// AuthConfig
 	authconfig := schemas.AddType("config", model.AuthConfig{})
 	authconfig.CollectionMethods = []string{"GET", "POST"}

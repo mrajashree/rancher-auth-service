@@ -174,13 +174,21 @@ func readSettings(settings []string) (map[string]string, error) {
 
 func updateSettings(settings map[string]string) error {
 	for key, value := range settings {
-		if value != "" {
-			log.Debugf("Update setting key:%v value: %v", key, value)
-			setting, err := RancherClient.Setting.ById(key)
+		log.Debugf("Update setting key:%v value: %v", key, value)
+		setting, err := RancherClient.Setting.ById(key)
+		if err != nil {
+			log.Errorf("Error getting the setting %v , error: %v", key, err)
+			return err
+		}
+		if setting.InDb && value == "" {
+			err = RancherClient.Setting.Delete(setting)
 			if err != nil {
-				log.Errorf("Error getting the setting %v , error: %v", key, err)
+				log.Errorf("Error deleting the setting %v, error: %v", key, err)
 				return err
 			}
+			continue
+		}
+		if value != "" {
 			setting, err = RancherClient.Setting.Update(setting, &client.Setting{
 				Value: value,
 			})
