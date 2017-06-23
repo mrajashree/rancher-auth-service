@@ -13,7 +13,7 @@ type LdapConfig struct {
 	GroupSearchDomain           string `json:"groupSearchDomain"`
 	ServiceAccountUsername      string `json:"serviceAccountUsername"`
 	ServiceAccountPassword      string `json:"serviceAccountPassword"`
-	Tls                         bool   `json:"tls"`
+	TLS                         bool   `json:"tls"`
 	UserSearchField             string `json:"userSearchField"`
 	UserLoginField              string `json:"userLoginField"`
 	UserObjectClass             string `json:"userObjectClass"`

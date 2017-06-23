@@ -73,11 +73,21 @@ func (l *LClient) InitializeSearchConfig() *SearchConfig {
 
 func (l *LClient) newConn() (*ldap.Conn, error) {
 	log.Debug("Now creating Ldap connection")
+	var lConn *ldap.Conn
+	var err error
 	searchConfig := l.SearchConfig
-	lConn, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", searchConfig.Server, searchConfig.Port))
-	if err != nil {
-		return nil, fmt.Errorf("Error %v creating connection", err)
+	if l.Config.TLS {
+		lConn, err = ldap.DialTLS("tcp", fmt.Sprintf("%s:%d", searchConfig.Server, searchConfig.Port), nil)
+		if err != nil {
+			return nil, fmt.Errorf("Error %v creating ssl connection", err)
+		}
+	} else {
+		lConn, err = ldap.Dial("tcp", fmt.Sprintf("%s:%d", searchConfig.Server, searchConfig.Port))
+		if err != nil {
+			return nil, fmt.Errorf("Error %v creating connection", err)
+		}
 	}
+
 	lConn.SetTimeout(time.Duration(l.Config.ConnectionTimeout) * time.Second)
 
 	err = lConn.Bind(l.Config.ServiceAccountUsername, l.Config.ServiceAccountPassword)
@@ -98,7 +108,7 @@ func (l *LClient) GenerateToken(jsonInput map[string]string) (model.Token, error
 
 	split := strings.Split(jsonInput["code"], ":")
 	username, password := split[0], split[1]
-	externalId := getUserExternalId(username, l.Config.LoginDomain)
+	externalID := getUserExternalID(username, l.Config.LoginDomain)
 
 	if password == "" {
 		return nilToken, fmt.Errorf("Failed to login, password not provided")
@@ -109,7 +119,7 @@ func (l *LClient) GenerateToken(jsonInput map[string]string) (model.Token, error
 		return nilToken, fmt.Errorf("Error %v creating connection", err)
 	}
 	log.Debug("Binding username password")
-	err = lConn.Bind(externalId, password)
+	err = lConn.Bind(externalID, password)
 	if err != nil {
 		return nilToken, fmt.Errorf("Error %v in ldap bind", err)
 	}
@@ -235,7 +245,7 @@ func (l *LClient) getAllowedIdentitiesFilter() (string, error) {
 		return "", err
 	}
 	for _, identity := range identities {
-		identitySize += 1
+		identitySize++
 		if strings.EqualFold(c.GroupScope, identity.ExternalIdType) {
 			grpFilterArr = append(grpFilterArr, memberOf)
 		} else {
@@ -331,11 +341,11 @@ func (l *LClient) GetIdentity(distinguishedName string, scope string) (client.Id
 }
 
 func (l *LClient) attributesToIdentity(attribs []*ldap.EntryAttribute, dnStr string, scope string) (*client.Identity, error) {
-	var externalIdType, accountName, externalId, login string
+	var externalIDType, accountName, externalID, login string
 	user := false
 
-	externalId = dnStr
-	externalIdType = scope
+	externalID = dnStr
+	externalIDType = scope
 
 	if isType(attribs, l.Config.UserObjectClass) {
 		for _, attr := range attribs {
@@ -343,7 +353,7 @@ func (l *LClient) attributesToIdentity(attribs []*ldap.EntryAttribute, dnStr str
 				if len(attr.Values) != 0 {
 					accountName = attr.Values[0]
 				} else {
-					accountName = externalId
+					accountName = externalID
 				}
 			}
 			if attr.Name == l.Config.UserLoginField {
@@ -357,7 +367,7 @@ func (l *LClient) attributesToIdentity(attribs []*ldap.EntryAttribute, dnStr str
 				if len(attr.Values) != 0 {
 					accountName = attr.Values[0]
 				} else {
-					accountName = externalId
+					accountName = externalID
 				}
 			}
 			if attr.Name == l.Config.UserLoginField {
@@ -377,13 +387,13 @@ func (l *LClient) attributesToIdentity(attribs []*ldap.EntryAttribute, dnStr str
 		Resource: client.Resource{
 			Type: "identity",
 		},
-		ExternalIdType: externalIdType,
-		ExternalId:     externalId,
+		ExternalIdType: externalIDType,
+		ExternalId:     externalID,
 		Name:           accountName,
 		Login:          login,
 		User:           user,
 	}
-	identity.Resource.Id = externalIdType + ":" + externalId
+	identity.Resource.Id = externalIDType + ":" + externalID
 
 	return identity, nil
 }
@@ -548,7 +558,7 @@ func (l *LClient) TestLogin(testAuthConfig *model.TestAuthConfig) error {
 	log.Info("Now generating Ldap token")
 	split := strings.Split(testAuthConfig.Code, ":")
 	username, password := split[0], split[1]
-	externalId := getUserExternalId(username, testAuthConfig.AuthConfig.LdapConfig.LoginDomain)
+	externalID := getUserExternalID(username, testAuthConfig.AuthConfig.LdapConfig.LoginDomain)
 
 	if password == "" {
 		return fmt.Errorf("Failed to login, password not provided")
@@ -565,7 +575,7 @@ func (l *LClient) TestLogin(testAuthConfig *model.TestAuthConfig) error {
 	defer lConn.Close()
 
 	log.Info("Binding username password")
-	err = lConn.Bind(externalId, password)
+	err = lConn.Bind(externalID, password)
 	if err != nil {
 		return fmt.Errorf("Error %v in ldap bind", err)
 	}
@@ -573,7 +583,7 @@ func (l *LClient) TestLogin(testAuthConfig *model.TestAuthConfig) error {
 	return nil
 }
 
-func getUserExternalId(username string, loginDomain string) string {
+func getUserExternalID(username string, loginDomain string) string {
 	if strings.Contains(username, "\\") {
 		return username
 	} else if loginDomain != "" {
