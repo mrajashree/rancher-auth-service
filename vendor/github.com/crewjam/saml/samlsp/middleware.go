@@ -96,11 +96,11 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // to start the SAML auth flow.
 func (m *Middleware) RequireAccount(handler http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		if token := m.GetAuthorizationToken(r); token != nil {
-			r = r.WithContext(WithToken(r.Context(), token))
-			handler.ServeHTTP(w, r)
-			return
-		}
+		//if token := m.GetAuthorizationToken(r); token != nil {
+		//	r = r.WithContext(WithToken(r.Context(), token))
+		//	handler.ServeHTTP(w, r)
+		//	return
+		//}
 
 		// If we try to redirect when the original request is the ACS URL we'll
 		// end up in a loop. This is a programming error, so we panic here. In
