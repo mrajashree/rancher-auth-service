@@ -474,6 +474,15 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if relayState := r.Form.Get("RelayState"); relayState != "" {
+			/* Delete the relayState as we already got the req ID, req URI and redirect params from it. Deleting it will make sure no
+			 other request gets the same relayState params.
+			 The saml library does this deletion in Authorize method https://github.com/rancher/saml/blob/v0.0.2-rancher1/samlsp/middleware.go#L225
+			 Our HandleSamlAssertion is the equivalent of Authorize, but since we are already getting request URI from getRequestIDAndRedirectParams,
+			 we can delete the relayState here, else we'd just be repeating the same code from getRequestIDAndRedirectParams to parse states. */
+			server.SamlServiceProvider.ClientState.DeleteState(w, r, relayState)
+		}
+
 		HandleSamlAssertion(w, r, assertion, server.SamlServiceProvider, redirectBackBaseValue, redirectBackPathValue)
 		return
 	}
